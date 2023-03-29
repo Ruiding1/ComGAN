@@ -242,7 +242,7 @@ class G_NET_of_DSComGAN(nn.Module):
 
         # Background_ subnets
         s_temp_inverse = self.colour_stag_inverse(c_temp, c_code_inv)
-        fake_img3_background = self.colour_image(s_temp_inverse)
+        fake_img3_background = self.colour_image_inverse(s_temp_inverse)
         fake_img3_inverse = (1 - fake_mask ) * fake_img3_background
 
         fake_imgs_inverse.append(fake_img3_inverse)

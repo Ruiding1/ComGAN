@@ -195,11 +195,11 @@ class G_NET_of_DSComGAN(nn.Module):
         self.second_mask = GET_MASK( ngf //4 )
 
         # # # Foreground subnetwoks # # #
-        self.colour_stage = FORE_SUBNETS(ngf)
+        self.colour_stage = FORB_SUBNETS(ngf)
         self.colour_image = GET_IMAGE(ngf // 4)
 
         # # # Background subnetwoks # # #
-        self.colour_stag_inverse = BACK_SUBNETS(ngf )
+        self.colour_stag_inverse = FORB_SUBNETS(ngf )
         self.colour_image_inverse = GET_IMAGE(ngf // 4)
 
         # # # Share feature # # #
@@ -346,7 +346,7 @@ class MASK_SUBNETS(nn.Module):
         out_code = self.downsample_1(out_code)
         return out_code
 
-class FORE_SUBNETS(nn.Module):
+class FORB_SUBNETS(nn.Module):
     def __init__(self, ngf, num_residual=2):
         super().__init__()
 
@@ -358,33 +358,6 @@ class FORE_SUBNETS(nn.Module):
         self.residual = self._make_layer()
         self.downsample_1 = sameBlock(ngf * 2, ngf // 4)
 
-    def _make_layer(self):
-        layers = []
-        for _ in range(self.num_residual):
-            layers.append(ResBlock(self.ngf * 2))
-        return nn.Sequential(*layers)
-
-    def forward(self, h_code, code):
-        h, w = h_code.size(2), h_code.size(3)
-        code = code.view(-1, self.code_len, 1, 1).repeat(1, 1, h, w)
-        h_c_code = torch.cat((code, h_code), 1)
-
-        out_code = self.jointConv(h_c_code)
-        out_code = self.residual(out_code)
-        out_code = self.downsample_1(out_code)
-        return out_code
-
-class BACK_SUBNETS(nn.Module):
-    def __init__(self, ngf, num_residual=2):
-        super().__init__()
-
-        self.ngf = ngf
-        self.code_len = cfg.FINE_GRAINED_CATEGORIES
-        self.num_residual = num_residual
-
-        self.jointConv = sameBlock(self.code_len + self.ngf, ngf * 2)
-        self.residual = self._make_layer()
-        self.downsample_1 = sameBlock(ngf * 2, ngf // 4)
     def _make_layer(self):
         layers = []
         for _ in range(self.num_residual):

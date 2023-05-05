@@ -7,8 +7,29 @@ import torch
 import torchvision.utils as vutils
 import sys
 import shutil
+import copy
 import torch.nn as nn
+from glob import glob
+from torch.utils.data import Dataset, DataLoader
+from PIL import Image
+from torchvision.transforms.functional import to_tensor
 
+class ImageDataset(Dataset):
+    def __init__(self, path, exts=['png', 'jpg']):
+        self.paths = []
+        for ext in exts:
+            self.paths.extend(
+                list(glob(os.path.join(path, '*.%s' % ext))))
+
+    def __len__(self):
+        return len(self.paths)
+
+    def __getitem__(self, idx):
+        image = Image.open(self.paths[idx])
+        tensor = copy.deepcopy(to_tensor(image))
+        image.close()
+        return tensor
+    
 def weights_init(m):
     classname = m.__class__.__name__
     

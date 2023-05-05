@@ -140,7 +140,20 @@ class Trainer(object):
 
         self.real_labels = torch.ones_like(torch.randn(self.batch_size, 1, 1, 1)).to(device)
         self.fake_labels = torch.zeros_like(torch.randn(self.batch_size, 1, 1, 1)).to(device)
+        
+        
+    def prepare_code_RA(self):
+        rand_z = torch.FloatTensor(self.batch_size, cfg.GAN.Z_DIM).normal_(0, 1).to(device) * 4  
+        rand_c = torch.zeros(self.batch_size, cfg.FINE_GRAINED_CATEGORIES).to(device)   
+        rand_idx = [i for i in range(cfg.FINE_GRAINED_CATEGORIESs)]
+        random.shuffle(rand_idx)   
+        for i, idx in enumerate(rand_idx[:self.batch_size]):
+            rand_c[i, idx] = 1
+        rand_c_inv = rand_c
+        
+        return rand_z, rand_c, rand_c_inv
 
+     
 
     def prepare_data(self, data):
 
@@ -247,7 +260,50 @@ class Trainer(object):
                 for i in range(0, BATCH):
                     temp = temp + 1
                     save_img_results(None, fake_final_img[i].detach().cpu(), temp, bg, self.image_dir, flage=0)
-
+            print('20,000 images have been generated!')
+            dataset = ImageDataset(self.image_dir, exts=['png', 'jpg'])
+            ## get inception score on 20,000 samples
+            print(inception_score(dataset, cuda=True, batch_size=32, resize=True, splits=10))
+            
+            ## get fid score on randomly generated samples
+            self.epoch = 0
+            print('Get the statistic of training images for computing fid score.')
+            self.inception = InceptionV3([3]).to(device)
+            self.inception.eval()
+            pred_arr = np.empty((len(self.dataset), 2048))
+            start_idx = 0
+            for data in self.dataloader:
+                batch = data[1].to(device)
+                with torch.no_grad():
+                    pred = self.inception(batch)[0]
+                if pred.size(2) != 1 or pred.size(3) != 1:
+                    pred = nn.AdaptiveAvgPool2d(pred, output_size=(1, 1))
+                    # adaptive_avg_pool2d(pred, output_size=(1, 1))
+                pred = pred.squeeze(3).squeeze(2).cpu().numpy()
+                pred_arr[start_idx:start_idx + pred.shape[0]] = pred
+                start_idx = start_idx + pred.shape[0]
+            self.mu = np.mean(pred_arr, axis=0)
+            self.sig = np.cov(pred_arr, rowvar=False)
+            pred_arr = np.empty((len(self.dataset), 2048))
+            start_idx = 0
+            for i in range(len(self.dataset) // self.batch_size):
+                real_z, real_c, real_c_inv = self.prepare_code_RA()
+                with torch.no_grad():
+                    _, _, _, _, fake_final_img = netG(real_z, real_c, real_c_inv)
+                    pred = self.inception(fake_final_img)[0]
+                if pred.size(2) != 1 or pred.size(3) != 1:
+                    print('size mismatch error occurred during the fid score computation!')
+                    pred = nn.AdaptiveAvgPool2d(pred, output_size=(1, 1))
+                    # adaptive_avg_pool2d(pred, output_size=(1, 1))
+                pred = pred.squeeze(3).squeeze(2).cpu().numpy()
+                pred_arr[start_idx:start_idx + pred.shape[0]] = pred
+                start_idx = start_idx + pred.shape[0]
+            cur_mu = np.mean(pred_arr, axis=0)
+            cur_sig = np.cov(pred_arr, rowvar=False)
+            cur_fid = calculate_frechet_distance(self.mu, self.sig, cur_mu, cur_sig)
+            print(str(self.epoch) + "th epoch finished", "\t fid : ", "{:.3f}".format(cur_fid))
+            
+############# Evaluation Completed  ###############
 
         self.max_epoch = cfg.TRAIN.FIRST_MAX_EPOCH
 

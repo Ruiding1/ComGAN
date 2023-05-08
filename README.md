@@ -1,6 +1,6 @@
-# ComGAN
+# ComGAN (NeurIPS 2022)
 
-This is the official code of our paper "ComGAN: Unsupervised Disentanglement and ﻿Segmentation via Image Composition"
+This is the official code of our paper "ComGAN: Unsupervised Disentanglement and Segmentation via Image Composition" [Paper](https://proceedings.neurips.cc/paper_files/paper/2022/hash/1df282080150537df7b00c20aadcafad-Abstract-Conference.html)
 
 ## Requirements
 
@@ -59,6 +59,18 @@ In `code/config.py`:
 - Specify the training switch in `TRAIN.FLAG`.
 - Run `python disentanglement_module.py SAVE_DIR`
 - Run `python segmentation_module.py SAVE_DIR`
+
+ ## Bibtex
+```
+@article{ding2022comgan,
+  title={ComGAN: unsupervised disentanglement and segmentation via image composition},
+  author={Ding, Rui and Guo, Kehua and Zhu, Xiangyuan and Wu, Zheng and Wang, Liwei},
+  journal={Advances in neural information processing systems},
+  volume={35},
+  pages={4638--4651},
+  year={2022}
+}
+```
 
 ## Acknowledgement
 

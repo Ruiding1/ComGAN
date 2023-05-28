@@ -62,10 +62,10 @@ In `code/config.py`:
 
  ## Bibtex
 ```
-@article{ding2022comgan,
+@inproceedings{ding2022comgan,
   title={ComGAN: unsupervised disentanglement and segmentation via image composition},
   author={Ding, Rui and Guo, Kehua and Zhu, Xiangyuan and Wu, Zheng and Wang, Liwei},
-  journal={Advances in neural information processing systems},
+  booktitle={Advances in neural information processing systems},
   volume={35},
   pages={4638--4651},
   year={2022}

@@ -367,7 +367,7 @@ class Trainer(object):
 
             data_path = cfg.DATA_DIR
             trainset = datasets.CUBDataset(data_path,
-                                           "train",
+                                           "test",
                                            transforms.Compose([transforms.Resize(152),
                                                                transforms.CenterCrop(128),
                                                                transforms.ToTensor(),

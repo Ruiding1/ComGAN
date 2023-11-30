@@ -14,6 +14,7 @@ import torch.nn as nn
 import torch.optim as optim
 import os
 import torchvision.utils as vutils
+from inception_score import inception_score
 from model import G_NET_of_DSComGAN, MASK_D, FORE_D, BACK_D, IMAGE_D
 from datasets import get_dataloader
 from evals import *
